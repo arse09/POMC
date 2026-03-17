@@ -287,11 +287,7 @@ impl App {
                         log::error!("Failed to load chunk [{}, {}]: {e}", pos.x, pos.z);
                         continue;
                     }
-                    if self.chunk_store.get_chunk(&pos).is_some() {
-                        chunks_to_mesh.push(pos);
-                    } else {
-                        log::warn!("Chunk [{}, {}] ignored (out of range)", pos.x, pos.z);
-                    }
+                    chunks_to_mesh.push(pos);
                 }
                 NetworkEvent::ChunkUnloaded { pos } => {
                     self.chunk_store.unload_chunk(&pos);
@@ -873,7 +869,6 @@ impl ApplicationHandler for App {
                                 for mesh in dispatcher.drain_results() {
                                     renderer.upload_chunk_mesh(&mesh);
                                 }
-                                renderer.flush_chunk_uploads();
                             }
 
                             if !self.paused && !self.inventory_open && !self.chat.is_open() {
@@ -945,9 +940,12 @@ impl ApplicationHandler for App {
                                         pitch: self.player.pitch,
                                         target_block: self.interaction.target.map(|t| {
                                             let state = self.chunk_store.get_block_state(
-                                                t.block_pos.x, t.block_pos.y, t.block_pos.z,
+                                                t.block_pos.x,
+                                                t.block_pos.y,
+                                                t.block_pos.z,
                                             );
-                                            let block: Box<dyn azalea_block::BlockTrait> = state.into();
+                                            let block: Box<dyn azalea_block::BlockTrait> =
+                                                state.into();
                                             (t.block_pos, t.face, block.id().to_string())
                                         }),
                                         chunk_count: renderer.loaded_chunk_count(),

@@ -221,7 +221,10 @@ fn build_debug_overlay(elements: &mut Vec<MenuElement>, info: &DebugInfo<'_>, gs
 
     if let Some((target, face, name)) = &info.target_block {
         left_lines.push(String::new());
-        left_lines.push(format!("Targeted Block: {}, {}, {}", target.x, target.y, target.z));
+        left_lines.push(format!(
+            "Targeted Block: {}, {}, {}",
+            target.x, target.y, target.z
+        ));
         left_lines.push(format!("minecraft:{name}"));
         left_lines.push(format!("Face: {:?}", face));
     }

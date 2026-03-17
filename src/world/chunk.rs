@@ -55,7 +55,7 @@ impl ChunkStore {
     }
 
     pub fn get_chunk(&self, pos: &ChunkPos) -> Option<Arc<RwLock<Chunk>>> {
-        self.partial_storage.limited_get(pos).cloned()
+        self.chunk_storage.get(pos).map(|c| Arc::clone(&c))
     }
 
     pub fn set_block_state(&self, x: i32, y: i32, z: i32, state: BlockState) {

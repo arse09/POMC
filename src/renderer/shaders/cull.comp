@@ -29,22 +29,4 @@ layout(push_constant) uniform PushConstants {
 };
 
 void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    if (idx >= draw_count) return;
-
-    vec3 bmin = aabbs[idx].aabb_min.xyz;
-    vec3 bmax = aabbs[idx].aabb_max.xyz;
-
-    for (int i = 0; i < 6; i++) {
-        vec4 plane = frustum_planes[i];
-        vec3 p = vec3(
-            plane.x >= 0.0 ? bmax.x : bmin.x,
-            plane.y >= 0.0 ? bmax.y : bmin.y,
-            plane.z >= 0.0 ? bmax.z : bmin.z
-        );
-        if (dot(plane.xyz, p) + plane.w < 0.0) {
-            draws[idx].instanceCount = 0;
-            return;
-        }
-    }
 }

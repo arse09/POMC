@@ -171,76 +171,13 @@ impl CullPipeline {
 
     pub fn upload_and_dispatch(
         &mut self,
-        device: &ash::Device,
-        cmd: vk::CommandBuffer,
-        frame: usize,
-        frustum_planes: &[[f32; 4]; 6],
-        chunk_buffers: &crate::renderer::chunk::buffer::ChunkBufferStore,
+        _device: &ash::Device,
+        _cmd: vk::CommandBuffer,
+        _frame: usize,
+        _frustum_planes: &[[f32; 4]; 6],
+        _chunk_buffers: &crate::renderer::chunk::buffer::ChunkBufferStore,
     ) -> u32 {
-        let draw_count = chunk_buffers.chunk_count();
-        if draw_count == 0 {
-            return 0;
-        }
-
-        let fd = &mut self.frames[frame];
-
-        let indirect_slice = fd.indirect_alloc.mapped_slice_mut().unwrap();
-        let commands: &mut [DrawIndexedIndirectCommand] = bytemuck::cast_slice_mut(
-            &mut indirect_slice[..draw_count as usize * INDIRECT_STRIDE as usize],
-        );
-
-        let aabb_slice = fd.aabb_alloc.mapped_slice_mut().unwrap();
-        let aabbs: &mut [ChunkAABB] =
-            bytemuck::cast_slice_mut(&mut aabb_slice[..draw_count as usize * AABB_STRIDE as usize]);
-
-        let count = chunk_buffers.write_draw_data(commands, aabbs);
-
-        let push = CullPushConstants {
-            frustum_planes: *frustum_planes,
-            draw_count: count,
-            _pad: [0; 3],
-        };
-
-        unsafe {
-            device.cmd_bind_pipeline(cmd, vk::PipelineBindPoint::COMPUTE, self.pipeline);
-            device.cmd_bind_descriptor_sets(
-                cmd,
-                vk::PipelineBindPoint::COMPUTE,
-                self.pipeline_layout,
-                0,
-                &[fd.descriptor_set],
-                &[],
-            );
-            device.cmd_push_constants(
-                cmd,
-                self.pipeline_layout,
-                vk::ShaderStageFlags::COMPUTE,
-                0,
-                bytemuck::bytes_of(&push),
-            );
-
-            let workgroups = count.div_ceil(64);
-            device.cmd_dispatch(cmd, workgroups, 1, 1);
-
-            let barrier = vk::BufferMemoryBarrier::default()
-                .src_access_mask(vk::AccessFlags::SHADER_WRITE)
-                .dst_access_mask(vk::AccessFlags::INDIRECT_COMMAND_READ)
-                .buffer(fd.indirect_buffer)
-                .offset(0)
-                .size(vk::WHOLE_SIZE);
-
-            device.cmd_pipeline_barrier(
-                cmd,
-                vk::PipelineStageFlags::COMPUTE_SHADER,
-                vk::PipelineStageFlags::DRAW_INDIRECT,
-                vk::DependencyFlags::empty(),
-                &[],
-                &[barrier],
-                &[],
-            );
-        }
-
-        count
+        0
     }
 
     pub fn indirect_buffer(&self, frame: usize) -> vk::Buffer {

@@ -539,30 +539,19 @@ impl Renderer {
     }
 
     pub fn upload_chunk_mesh(&mut self, mesh: &ChunkMeshData) {
-        self.chunk_buffers.upload(
-            mesh,
-            &self.ctx.device,
-            &self.ctx.allocator,
-            self.ctx.graphics_queue,
-            self.ctx.command_pool,
-        );
-    }
-
-    pub fn flush_chunk_uploads(&mut self) {
-        self.chunk_buffers.flush(
-            &self.ctx.device,
-            self.ctx.graphics_queue,
-            self.ctx.command_pool,
-        );
+        self.chunk_buffers
+            .upload(mesh, &self.ctx.device, &self.ctx.allocator);
     }
 
     pub fn remove_chunk_mesh(&mut self, pos: &ChunkPos) {
-        self.chunk_buffers.remove(pos);
+        self.chunk_buffers
+            .remove(&self.ctx.device, &self.ctx.allocator, pos);
     }
 
     pub fn clear_chunk_meshes(&mut self) {
         self.wait_for_all_frames();
-        self.chunk_buffers.clear();
+        self.chunk_buffers
+            .clear(&self.ctx.device, &self.ctx.allocator);
     }
 
     pub fn create_mesh_dispatcher(&self) -> MeshDispatcher {
@@ -762,28 +751,8 @@ impl Renderer {
                         sky,
                     );
 
-                    if draw_count > 0 {
-                        self.chunk_pipeline.bind(&self.ctx.device, cmd, frame);
-                        self.ctx.device.cmd_bind_vertex_buffers(
-                            cmd,
-                            0,
-                            &[self.chunk_buffers.vertex_buffer()],
-                            &[0],
-                        );
-                        self.ctx.device.cmd_bind_index_buffer(
-                            cmd,
-                            self.chunk_buffers.index_buffer(),
-                            0,
-                            vk::IndexType::UINT32,
-                        );
-                        self.ctx.device.cmd_draw_indexed_indirect(
-                            cmd,
-                            self.cull_pipeline.indirect_buffer(frame),
-                            0,
-                            draw_count,
-                            std::mem::size_of::<chunk::buffer::DrawIndexedIndirectCommand>() as u32,
-                        );
-                    }
+                    self.chunk_pipeline.bind(&self.ctx.device, cmd, frame);
+                    self.chunk_buffers.draw_all(&self.ctx.device, cmd);
 
                     if let Some((block_pos, stage)) = destroy_info {
                         self.block_overlay_pipeline.draw(
