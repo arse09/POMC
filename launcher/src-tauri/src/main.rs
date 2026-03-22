@@ -5,6 +5,11 @@ mod commands;
 mod downloader;
 
 fn main() {
+    #[cfg(target_os = "linux")]
+    if std::env::var("WEBKIT_DISABLE_COMPOSITING_MODE").is_err() {
+        unsafe { std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "0") };
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
