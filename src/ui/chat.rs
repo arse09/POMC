@@ -65,6 +65,10 @@ impl ChatState {
         self.cursor_blink = Instant::now();
     }
 
+    pub fn close(&mut self) {
+        self.open = false;
+    }
+
     pub fn handle_key_input(
         &mut self,
         typed_chars: &[char],
