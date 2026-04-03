@@ -28,14 +28,14 @@ fn main() {
             Some(path) => {
                 let token_path = std::path::Path::new(path);
                 if !token_path.exists() {
-                    eprintln!("Please use the POMC Launcher to start the game.");
+                    eprintln!("Please use the Pomme Launcher to start the game.");
                     std::process::exit(1);
                 }
                 let _ = std::fs::remove_file(token_path);
             }
             None => {
-                eprintln!("Please use the POMC Launcher to start the game.");
-                eprintln!("Download it at: https://github.com/Purdze/POMC");
+                eprintln!("Please use the Pomme Launcher to start the game.");
+                eprintln!("Download it at: https://github.com/PommeMC/Pomme-Client");
                 std::process::exit(1);
             }
         }
