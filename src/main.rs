@@ -23,7 +23,8 @@ const SUPPORTED_VERSIONS: [&str; 3] = ["26.1", "26.1.1-rc-1", "26.1.1"];
 fn main() {
     let args = args::LaunchArgs::parse();
 
-    if !cfg!(debug_assertions) && !args.dev {
+    #[cfg(not(debug_assertions))]
+    {
         match &args.launch_token {
             Some(path) => {
                 let token_path = std::path::Path::new(path);
@@ -44,16 +45,15 @@ fn main() {
     let version = args
         .version
         .as_deref()
-        .unwrap_or_else(|| SUPPORTED_VERSIONS.first().unwrap());
+        .unwrap_or_else(|| SUPPORTED_VERSIONS.last().unwrap());
 
     if !SUPPORTED_VERSIONS.contains(&version) {
         eprintln!(
             "{version} is not currently supported. Supported versions: {:#?}",
             SUPPORTED_VERSIONS
         );
-        if !cfg!(debug_assertions) && !args.dev {
-            std::process::exit(1);
-        }
+        #[cfg(not(debug_assertions))]
+        std::process::exit(1);
     }
 
     let data_dirs = dirs::DataDirs::resolve(
