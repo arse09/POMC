@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { HiChevronDown } from "react-icons/hi2";
-import { useDropdown } from "../../lib/hooks.ts";
-import { useAppStateContext } from "../../lib/state.ts";
-import { Server } from "../../lib/types.ts";
+import { useDropdown } from "../../lib/hooks";
+import { useAppStateContext } from "../../lib/state";
+import { Server } from "../../lib/types";
 
 const UNCATEGORIZED = "Uncategorized";
 

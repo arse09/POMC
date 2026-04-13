@@ -10,21 +10,16 @@ import {
   HiPlus,
   HiTrash,
 } from "react-icons/hi2";
-import { formatRelativeDate } from "../lib/helpers.ts";
+import { commands } from "../bindings";
+import { formatRelativeDate } from "../lib/helpers";
 import { useAppStateContext } from "../lib/state";
-import type { handleLaunchType, InstallationError } from "../lib/types.ts";
+import type { handleLaunchType } from "../lib/types";
 
 interface InstallationsPageProps {
-  deleteInstallation: (install_id: string) => Promise<null | InstallationError>;
   handleLaunch: handleLaunchType;
-  ensureAssets: (version: string) => Promise<Error | null>;
 }
 
-export default function InstallationsPage({
-  deleteInstallation,
-  handleLaunch,
-  ensureAssets,
-}: InstallationsPageProps) {
+export default function InstallationsPage({ handleLaunch }: InstallationsPageProps) {
   const {
     activeInstall,
     setActiveInstall,
@@ -76,29 +71,24 @@ export default function InstallationsPage({
             <span className="install-card-played">
               {inst.last_played ? formatRelativeDate(inst.last_played) : "Never"}
             </span>
-            {downloadedVersions.has(inst.version) ? (
-              <button
-                className="install-play-btn"
-                onClick={() => {
-                  setActiveInstall(inst);
-                  setPage("home");
-                  handleLaunch();
-                }}
-              >
-                <HiPlay /> Play
-              </button>
-            ) : (
-              <button
-                className="install-download-btn"
-                onClick={() => {
-                  setActiveInstall(inst);
-                  setPage("home");
-                  ensureAssets(inst.version);
-                }}
-              >
-                <BiSolidDownload /> Install
-              </button>
-            )}
+            <button
+              className="install-play-btn"
+              onClick={() => {
+                setActiveInstall(inst);
+                setPage("home");
+                handleLaunch({ install: inst });
+              }}
+            >
+              {downloadedVersions.has(inst.version) ? (
+                <>
+                  <HiPlay /> Play
+                </>
+              ) : (
+                <>
+                  <BiSolidDownload /> Install
+                </>
+              )}
+            </button>
             <button
               className="install-folder-btn"
               onClick={async () => {
@@ -152,12 +142,25 @@ export default function InstallationsPage({
                         message: "Are you sure you want to delete this installation?",
                         onConfirm: async () => {
                           const index = installations.findIndex((i) => i.id === inst.id);
-                          await deleteInstallation(inst.id);
-                          setActiveInstall((current) => {
-                            if (current?.id !== inst.id) return current;
-                            const newList = installations.filter((i) => i.id !== inst.id);
-                            return newList[index] ?? newList[index - 1] ?? null;
-                          });
+                          const res = await commands.deleteInstallation(inst.id);
+                          if (res.ok || res.error.kind === "InstallNotFound") {
+                            setInstallations((prev) => prev.filter((i) => i.id !== inst.id));
+                            setActiveInstall((current) => {
+                              if (current?.id !== inst.id) return current;
+                              const newList = installations.filter((i) => i.id !== inst.id);
+                              const next = newList[index] ?? newList[index - 1] ?? null;
+                              if (
+                                !next ||
+                                (next &&
+                                  newList.every(
+                                    (i) => i.id === "latest-release" || i.id === "latest-snapshot",
+                                  ))
+                              ) {
+                                return newList.find((i) => i.id === "latest-release") ?? next;
+                              }
+                              return next;
+                            });
+                          }
                         },
                       },
                     });

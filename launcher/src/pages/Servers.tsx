@@ -93,6 +93,7 @@ function SortableServer({
   });
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const { ref: menuRef, isOpen: menuOpen, toggle: toggleMenu, close: closeMenu } = useDropdown();
+  const { setPage } = useAppStateContext();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -133,7 +134,10 @@ function SortableServer({
         <button
           className="install-play-btn"
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => handleLaunch(s.ip, s.version)}
+          onClick={() => {
+            setPage("home");
+            handleLaunch({ serverIp: s.ip, serverVersion: s.version });
+          }}
         >
           <HiPlay /> Join
         </button>

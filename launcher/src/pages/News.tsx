@@ -1,7 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { HiArrowLeft, HiArrowTopRightOnSquare } from "react-icons/hi2";
+import { PatchNote } from "../bindings/pomme_launcher/commands";
 import { useAppStateContext } from "../lib/state";
-import { PatchNote } from "../lib/types";
 
 const MORE_PATCH_NOTES_URL = "https://aka.ms/MorePatchNotes";
 

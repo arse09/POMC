@@ -1,29 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::Manager;
-use tokio::sync::Mutex;
-
-mod auth;
-mod commands;
-mod downloader;
-mod installations;
-mod ping;
-mod settings;
-mod storage;
-
-use std::collections::VecDeque;
-
-/// Maps all supported versions to their protocol version.
-/// Snapshots encode as `(1 << 30) | base_protocol`.
-/// KEEP IN SYNC WITH src/main.rs
-const VERSION_PROTOCOL_MAP: [(&str, i32); 3] =
-    [("26.1", 775), ("26.1.1-rc-1", 0x40000130), ("26.1.1", 775)];
-
-#[derive(Default)]
-pub struct AppState {
-    pub client_logs: Mutex<VecDeque<String>>,
-    pub installations_lock: Mutex<()>,
-}
 
 fn main() {
     #[cfg(target_os = "linux")]
@@ -31,41 +8,23 @@ fn main() {
         unsafe { std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "0") };
     }
 
+    let builder = pomme_launcher::get_builder();
+
+    #[cfg(debug_assertions)]
+    pomme_launcher::generate_bindings();
+
+    let invoke_handler = builder.invoke_handler();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .setup(|app| {
-            storage::ensure_dirs();
-            app.manage(AppState::default());
+        .setup(move |app| {
+            builder.mount_events(app);
+            pomme_launcher::storage::ensure_dirs();
+            app.manage(pomme_launcher::AppState::default());
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![
-            commands::get_all_accounts,
-            commands::add_account,
-            commands::remove_account,
-            commands::ensure_assets,
-            commands::get_versions,
-            commands::refresh_account,
-            commands::get_skin_url,
-            commands::get_patch_notes,
-            commands::get_patch_content,
-            commands::launch_game,
-            commands::get_client_logs,
-            commands::load_launcher_settings,
-            commands::set_launcher_language,
-            commands::set_keep_launcher_open,
-            commands::set_launch_with_console,
-            commands::ping_server,
-            commands::load_servers,
-            commands::save_servers,
-            commands::load_installations,
-            commands::create_installation,
-            commands::delete_installation,
-            commands::duplicate_installation,
-            commands::edit_installation,
-            commands::get_downloaded_versions,
-        ])
+        .invoke_handler(invoke_handler)
         .run(tauri::generate_context!())
         .expect("failed to run Pomme launcher");
 }

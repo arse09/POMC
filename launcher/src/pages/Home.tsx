@@ -1,9 +1,10 @@
 import { BiSolidDownload } from "react-icons/bi";
 import { HiChevronDown, HiCube, HiPlay } from "react-icons/hi2";
+import { PatchNote } from "../bindings/pomme_launcher/commands";
 import SkinRunner from "../components/SkinRunner";
 import { useDropdown } from "../lib/hooks";
 import { useAppStateContext } from "../lib/state";
-import { handleLaunchType, PatchNote } from "../lib/types";
+import { handleLaunchType } from "../lib/types";
 
 interface HomepageProps {
   handleLaunch: handleLaunchType;
